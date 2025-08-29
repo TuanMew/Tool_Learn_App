@@ -207,14 +207,14 @@ class VocabularySlideshow:
     def on_escape(self, event=None):
         try:
             if hasattr(self, "icon") and self.icon:
-                self.icon.stop()   # dừng pystray
+                self.icon.stop()
         except Exception:
             pass
         try:
-            self.root.quit()       # thoát mainloop
-            self.root.destroy()    # hủy cửa sổ
+            self.root.quit()
+            self.root.destroy()
         finally:
-            sys.exit(0)            # kết thúc tiến trình
+            sys.exit(0)
 
 def main():
     excel_file = resource_path("vocabulary.xlsx")
