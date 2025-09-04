@@ -82,7 +82,7 @@ class VocabularySlideshow:
             image = Image.new('RGB', (64, 64), color='blue')
         menu = (
             pystray.MenuItem("Show", self.show_app, default=True),
-            pystray.MenuItem("Hide", self.root.withdraw),
+            pystray.MenuItem("Hide", self.hide_app),
             pystray.MenuItem("Exit", self.quit_app)
         )
         self.icon = pystray.Icon("Chinese Vocabulary", image, "Chinese Vocabulary", menu)
@@ -112,20 +112,28 @@ class VocabularySlideshow:
             self.show_full_slide()
 
     #hiển thị cửa sổ và thoát chương trình
-    def show_app(self):
-        self.root.deiconify()
-        self.root.attributes('-topmost', True)
-        self.root.update()
-        self.root.attributes('-topmost', False)
-    def quit_app(self):
+    def show_app(self, *args, **kwargs):
+        def _show():
+            self.root.deiconify()
+            self.root.attributes('-topmost', True)
+            self.root.update()
+            self.root.attributes('-topmost', False)
+        self.root.after(0, _show)
+    def hide_app(self, *args, **kwargs):
+        self.root.after(0, self.root.withdraw)
+    def safe_shutdown(self):
         try:
             if hasattr(self, "icon") and self.icon:
                 self.icon.stop()
         except Exception:
             pass
-        self.root.quit()
-        self.root.destroy()
-        sys.exit(0)
+        try:
+            self.root.quit()
+            self.root.destroy()
+        finally:
+            sys.exit(0)
+    def quit_app(self, *args, **kwargs):
+        self.root.after(0, self.safe_shutdown)
 
     # Đọc file Excel
     def load_vocabulary(self, excel_file):
@@ -147,14 +155,13 @@ class VocabularySlideshow:
     def fade_in_label(self, label, text, target_color, steps=30, delay=50):
         label.config(text=text)
         from_colors = (180, 180, 180)   # Màu xám nhạt ban đầu
-        to_rgb = self.root.winfo_rgb(target_color)  # (65535, 0, 0)
-        to_rgb = tuple(c // 256 for c in to_rgb)
+        to_rgb = tuple(c // 256 for c in self.root.winfo_rgb(target_color))
 
-        r_step = (to_rgb[0] - from_colors[0][0]) // steps
-        g_step = (to_rgb[1] - from_colors[0][1]) // steps
-        b_step = (to_rgb[2] - from_colors[0][2]) // steps
+        r_step = (to_rgb[0] - from_colors[0]) // steps
+        g_step = (to_rgb[1] - from_colors[1]) // steps
+        b_step = (to_rgb[2] - from_colors[2]) // steps
 
-        def _step(i=0, r=from_colors[0][0], g=from_colors[0][1], b=from_colors[0][2]):
+        def _step(i=0, r=from_colors[0], g=from_colors[1], b=from_colors[2]):
             color = f'#{r:02x}{g:02x}{b:02x}'
             label.config(fg=color)
             if i < steps:
@@ -231,6 +238,14 @@ def main():
     excel_file = resource_path("vocabulary.xlsx")
     root = tk.Tk()
     app = VocabularySlideshow(root, excel_file)
+
+    root.bind("<Escape>", lambda e: app.quit_app())
+    def handle_sigint(signum, frame):
+        root.after(0, app.safe_shutdown)
+    signal.signal(signal.SIGINT, handle_sigint)
+    if sys.platform.startswith("win") and hasattr(signal, "SIGBREAK"):
+        signal.signal(signal.SIGBREAK, handle_sigint)
     root.mainloop()
+    
 if __name__ == "__main__":
     main()
