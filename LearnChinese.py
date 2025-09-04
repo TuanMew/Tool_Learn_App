@@ -60,6 +60,15 @@ class VocabularySlideshow:
             self.hanzi_label.config(text=f"Lỗi khi đọc file Excel: {str(e)}")
             print(f"lỗi khi đọc file excel: {str(e)}")
 
+        # Tạo biến để duyệt không lặp trong 1 vòng
+        if self.vocab_list:
+            self.deck = list(range(len(self.vocab_list)))
+            random.shuffle(self.deck)
+            self.deck_pos = 0
+        else:
+            self.deck = []
+            self.deck_pos = 0
+
         # Tạo biểu tượng trong system tray
         try:
             icon_path = resource_path("china.ico")  # Đặt file icon.ico trong cùng thư mục
@@ -80,7 +89,6 @@ class VocabularySlideshow:
         self.icon.run_detached()
 
         # Biến để theo dõi slide hiện tại và trạng thái slideshow
-        self.current_index = 0
         self.slide_visible = False
         if self.vocab_list:
             self.run_slideshow()
@@ -99,10 +107,6 @@ class VocabularySlideshow:
         y = event.y_root - self.drag_start_y
         self.root.geometry(f"+{x}+{y}")
 
-    def stop_drag(self, event):
-        # Kết thúc kéo, không cần xử lý thêm
-        pass
-
     def on_click_release(self, event):
         if not self.has_dragged:
             self.show_full_slide()
@@ -114,26 +118,35 @@ class VocabularySlideshow:
         self.root.update()
         self.root.attributes('-topmost', False)
     def quit_app(self):
-        self.icon.stop()
+        try:
+            if hasattr(self, "icon") and self.icon:
+                self.icon.stop()
+        except Exception:
+            pass
         self.root.quit()
+        self.root.destroy()
+        sys.exit(0)
 
+    # Đọc file Excel
     def load_vocabulary(self, excel_file):
-        # Đọc file Excel
-        df = pd.read_excel(excel_file, engine='openpyxl')
-        # Chuyển đổi dữ liệu thành danh sách từ điển
-        vocab_list = df.to_dict('records')
+        df = pd.read_excel(excel_file, engine='openpyxl', dtype=str)
+        df = df.fillna("N/A")
+
         # Đảm bảo các cột đúng tên
         expected_columns = ['Chữ hán', 'Phiên âm', 'Nghĩa', 'Ví dụ', 'Phiên âm ví dụ', 'Dịch']
-        for vocab in vocab_list:
-            for col in expected_columns:
-                if col not in vocab:
-                    vocab[col] = "N/A"  # Thêm giá trị mặc định nếu thiếu cột
-        return vocab_list
+        for col in expected_columns:
+            if col not in df.columns:
+                df[col] = "N/A"  # Giá trị mặc định nếu cột không tồn tại
+        
+        # Lọc bỏ các dòng không có chữ hán
+        df = df[df['Chữ hán'].astype(str).str.strip() != '']
+        # Loại bỏ khoảng trắng thừa
+        df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        return df.to_dict('records')
 
     def fade_in_label(self, label, text, target_color, steps=30, delay=50):
         label.config(text=text)
-        # Tạo các bước màu dần từ màu xám sang target
-        from_colors = [(180, 180, 180)]  # Màu xám nhạt ban đầu
+        from_colors = (180, 180, 180)   # Màu xám nhạt ban đầu
         to_rgb = self.root.winfo_rgb(target_color)  # (65535, 0, 0)
         to_rgb = tuple(c // 256 for c in to_rgb)
 
@@ -153,31 +166,41 @@ class VocabularySlideshow:
     def show_full_slide(self, event=None):
         if self.slide_visible:
             return
-        for label in [self.meaning_label, self.example_label, self.pinyin_example_label, self.translation_label]:
+        for label in [self.example_label, self.pinyin_example_label, self.translation_label]:
             if not label.winfo_ismapped():
                 label.pack()
-            self.root.update_idletasks()
-            width = self.border_frame.winfo_reqwidth()
-            height = self.border_frame.winfo_reqheight()
-            self.root.geometry(f"{width + 10}x{height}")
-            self.slide_visible = True
+
+        self.root.update_idletasks()
+        width = self.border_frame.winfo_reqwidth()
+        height = self.border_frame.winfo_reqheight()
+        self.root.geometry(f"{width + 10}x{height}")
+        self.slide_visible = True
+
+    def draw_next_index(self):
+        if not self.deck:
+            return None
+        idx = self.deck[self.deck_pos]
+        self.deck_pos += 1
+        if self.deck_pos >= len(self.deck):
+            random.shuffle(self.deck)
+            self.deck_pos = 0
+        return idx
 
     def update_slide(self):
         if not self.vocab_list:
             return
+        
         # Cập nhật nội dung các nhãn
-        previous_index = getattr(self, 'current_index', None)
-        new_index = previous_index
-        while new_index == previous_index:
-            new_index = random.randint(0, len(self.vocab_list) - 1)
+        idx = self.draw_next_index()
+        if idx is None:
+            return
 
         #foget label skip hanzi_label, pinyin_label, meaning_label
         self.slide_visible = False
         for label in [self.example_label, self.pinyin_example_label, self.translation_label]:
             label.pack_forget()
 
-        self.current_index = new_index
-        vocab = self.vocab_list[self.current_index]
+        vocab = self.vocab_list[idx]
         self.fade_in_label(self.hanzi_label,f"{vocab['Chữ hán']}","#CA0000")
         self.fade_in_label(self.pinyin_label,f"{vocab['Phiên âm']}","#595656")
         self.fade_in_label(self.meaning_label,f"{vocab['Nghĩa']}","black")
@@ -203,37 +226,11 @@ class VocabularySlideshow:
             self.update_slide()
             self.show_app()
             self.root.after(15000, self.hide_and_restore_app)
-    
-    def on_escape(self, event=None):
-        try:
-            if hasattr(self, "icon") and self.icon:
-                self.icon.stop()
-        except Exception:
-            pass
-        try:
-            self.root.quit()
-            self.root.destroy()
-        finally:
-            sys.exit(0)
 
 def main():
     excel_file = resource_path("vocabulary.xlsx")
     root = tk.Tk()
     app = VocabularySlideshow(root, excel_file)
-
-    # Nhấn ESC cũng thoát
-    root.bind("<Escape>", app.on_escape)
-
-    # Bắt Ctrl+C từ terminal
-    def handle_sigint(signum, frame):
-        # gọi thoát trên GUI thread để an toàn
-        root.after(0, app.on_escape)
-
-    signal.signal(signal.SIGINT, handle_sigint)
-    # (Tùy chọn) Windows: Ctrl+Break
-    if sys.platform.startswith("win") and hasattr(signal, "SIGBREAK"):
-        signal.signal(signal.SIGBREAK, handle_sigint)
-        
     root.mainloop()
 if __name__ == "__main__":
     main()
