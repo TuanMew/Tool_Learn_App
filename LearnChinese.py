@@ -207,10 +207,10 @@ class VocabularySlideshow:
 
         vocab = self.vocab_list[idx]
         self.fade_in_label(self.hanzi_label,f"{vocab['Chữ hán']}","#CA0000")
-        self.fade_in_label(self.pinyin_label,f"{vocab['Phiên âm']}","#595656")
+        self.fade_in_label(self.pinyin_label,f"{vocab['Phiên âm']}","#494949")
         self.fade_in_label(self.meaning_label,f"{vocab['Nghĩa']}","black")
         self.fade_in_label(self.example_label,f"{vocab['Ví dụ']}","#190098")
-        self.fade_in_label(self.pinyin_example_label,f"{vocab['Phiên âm ví dụ']}","#595656")
+        self.fade_in_label(self.pinyin_example_label,f"{vocab['Phiên âm ví dụ']}","#494949")
         self.fade_in_label(self.translation_label,f"{vocab['Dịch']}","black")
 
         self.root.update_idletasks()
