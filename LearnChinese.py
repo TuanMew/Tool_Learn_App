@@ -20,7 +20,7 @@ class VocabularySlideshow:
         self.root.overrideredirect(True)
 
         # Tạo Frame làm viền
-        self.border_frame = tk.Frame(self.root, bg="#FFFEEA", borderwidth=12, relief="sunken")
+        self.border_frame = tk.Frame(self.root, bg="#FFFEEE", borderwidth=12, relief="sunken")
         self.border_frame.pack(fill="both", expand=True)
 
         self.drag_start_x = 0
@@ -40,12 +40,12 @@ class VocabularySlideshow:
         self.example_font = font.Font(family="SimSun", size=35)
 
         # Tạo các nhãn để hiển thị thông tin
-        self.hanzi_label = tk.Label(self.border_frame, font=self.chinese_font, bg="#FFFEEA")
-        self.pinyin_label = tk.Label(self.border_frame, font=self.pinyin_font, bg="#FFFEEA")
-        self.meaning_label = tk.Label(self.border_frame, font=self.normal_font, bg="#FFFEEA")
-        self.example_label = tk.Label(self.border_frame, font=self.example_font, bg="#FFFEEA")
-        self.pinyin_example_label = tk.Label(self.border_frame, font=self.pinyin_font, bg="#FFFEEA")
-        self.translation_label = tk.Label(self.border_frame, font=self.normal_font, bg="#FFFEEA")
+        self.hanzi_label = tk.Label(self.border_frame, font=self.chinese_font, bg="#FFFEEE")
+        self.pinyin_label = tk.Label(self.border_frame, font=self.pinyin_font, bg="#FFFEEE")
+        self.meaning_label = tk.Label(self.border_frame, font=self.normal_font, bg="#FFFEEE")
+        self.example_label = tk.Label(self.border_frame, font=self.example_font, bg="#FFFEEE")
+        self.pinyin_example_label = tk.Label(self.border_frame, font=self.pinyin_font, bg="#FFFEEE")
+        self.translation_label = tk.Label(self.border_frame, font=self.normal_font, bg="#FFFEEE")
 
         # Đặt vị trí các nhãn và căn giữa
         self.hanzi_label.pack()
