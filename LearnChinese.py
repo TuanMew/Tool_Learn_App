@@ -239,7 +239,7 @@ def main():
 
     root.bind("<Escape>", lambda e: app.quit_app())
     def handle_sigint(signum, frame):
-        root.after(0, app.safe_shutdown)
+        root.after(0, app.quit_app())
     signal.signal(signal.SIGINT, handle_sigint)
     if sys.platform.startswith("win") and hasattr(signal, "SIGBREAK"):
         signal.signal(signal.SIGBREAK, handle_sigint)
