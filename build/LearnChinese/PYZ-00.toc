@@ -1,4 +1,4 @@
-('D:\\Tool_Learn_App\\build\\LearnChinese\\PYZ-00.pyz',
+('D:\\Tuan-Auto\\Tool\\Tool_Learn_App\\build\\LearnChinese\\PYZ-00.pyz',
  [('PIL',
    'C:\\Users\\AIOT\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\PIL\\__init__.py',
    'PYMODULE'),

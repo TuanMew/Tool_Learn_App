@@ -196,12 +196,10 @@ class VocabularySlideshow:
     def update_slide(self):
         if not self.vocab_list:
             return
-        
-        # Cập nhật nội dung các nhãn
+        # Cập nhật nội dung các nhãn tránh lặp lại từ
         idx = self.draw_next_index()
         if idx is None:
             return
-
         #foget label skip hanzi_label, pinyin_label, meaning_label
         self.slide_visible = False
         for label in [self.example_label, self.pinyin_example_label, self.translation_label]:
