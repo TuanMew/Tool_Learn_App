@@ -82,7 +82,7 @@ class VocabularySlideshow:
             image = Image.new('RGB', (64, 64), color='blue')
         menu = (
             pystray.MenuItem("Show", self.show_app, default=True),
-            
+            pystray.MenuItem("Hide", self.hide_app),
             pystray.MenuItem("Exit", self.quit_app)
         )
         self.icon = pystray.Icon("Chinese Vocabulary", image, "Chinese Vocabulary", menu)
